@@ -1,0 +1,5 @@
+Did Simon encrypt correctly? True
+Did Simon decrypt correctly? True
+
+Simon in python took 0.056528329849243164 seconds
+Simon used 9.453125 MB of memory
