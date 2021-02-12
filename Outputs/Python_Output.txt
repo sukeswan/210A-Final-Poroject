@@ -1,5 +1,6 @@
+--- Results of Simon in Python --- 
+ 
 Did Simon encrypt correctly? True
 Did Simon decrypt correctly? True
-
-Simon in python took 0.056528329849243164 seconds
-Simon used 9.453125 MB of memory
+Simon took an average of 0.03354024887084961 seconds over 10 runs
+Simon used an average of 9.5203125 MB of memory over 10 runs

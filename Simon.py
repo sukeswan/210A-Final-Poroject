@@ -1,6 +1,5 @@
 import time 
-start_time = time.time()
-
+from statistics import mean 
 import os, psutil
 process = psutil.Process(os.getpid())
 
@@ -113,11 +112,6 @@ def generate_keys(key):
 
     sub_keys = [k0,k1,k2,k3]
 
-    # print("Round {:02d} Key {}".format(0,binary_to_hex(k0)))
-    # print("Round {:02d} Key {}".format(1,binary_to_hex(k1)))
-    # print("Round {:02d} Key {}".format(2,binary_to_hex(k2)))
-    # print("Round {:02d} Key {}".format(3,binary_to_hex(k3)))
-
     for i in range(4,72):
         temp = shift_right(sub_keys[i-1],3)
         temp = bit_xor(temp,sub_keys[i-3])
@@ -126,18 +120,15 @@ def generate_keys(key):
         invert_kim = invert(sub_keys[i-4])
         temp = bit_xor(invert_kim,temp)
         
-        # xor 3 (11) with the two last bits in the key
-        z_bit = z4[((i-4) % 62)]
+        z_bit = z4[((i-4) % 62)]            # xor 3 (11) with the two last bits in the key
         temp[-1] = temp[-1] ^ z_bit ^ 1
         temp[-2] = temp[-2] ^ 1
         sub_keys.append(temp)
-
-        #print("Round {:02d} Key {}".format(i,binary_to_hex(temp)))
     
     return sub_keys
 
 def main():
-
+    start_time = time.time()
     binary_key = hex_to_binary(key,256)
     sub_keys = generate_keys(binary_key)
 
@@ -145,19 +136,34 @@ def main():
     binary_plain_text = hex_to_binary(plain_text,128)
     binary_cipher_text = simon(binary_plain_text,sub_keys)
     final_encrypt = binary_to_hex(binary_cipher_text)
-    check = ciphertext == final_encrypt
-    print("Did Simon encrypt correctly? {}".format(check))
+    encrypt_check = ciphertext == final_encrypt
 
     # Decryption of Test Vector
     sub_keys.reverse()
     binary_cipher_text = hex_to_binary(ciphertext,128)
     binary_plain_text = simon_d(binary_cipher_text,sub_keys)
     final_decrypt = binary_to_hex(binary_plain_text)
-    check = plain_text == final_decrypt
-    print("Did Simon decrypt correctly? {}\n".format(check))
+    decrypt_check = plain_text == final_decrypt
+    
+    net_time = time.time() - start_time
+    memory = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
 
+    return encrypt_check,decrypt_check,net_time,memory
+    
 if __name__ == "__main__":
-    main()
 
-print("Simon in python took %s seconds" % (time.time() - start_time))
-print("Simon used {} MB of memory".format(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2))
+    times = []
+    mems = []
+    for i in range(10):
+        e_check,d_check,net_time,memory = main()
+        times.append(net_time)
+        mems.append(memory)
+
+avg_time = mean(times)
+avg_space = mean(mems)
+
+print("--- Results of Simon in Python --- \n ")
+print("Did Simon encrypt correctly? {}".format(e_check))
+print("Did Simon decrypt correctly? {}".format(d_check))
+print("Simon took an average of {} seconds over 10 runs".format(avg_time))
+print("Simon used an average of {} MB of memory over 10 runs".format(avg_space))
