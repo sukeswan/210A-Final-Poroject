@@ -249,4 +249,4 @@ console.log("Simon took an average of " + average(times) +  " seconds over 10 ru
 console.log("Simon used an average of " + average(mems) +  " MB of memory over 10 runs\n")
 
 console.log("Times: " + times)
-console.log("Space:" + mems + "\n")
+console.log("Space: " + mems + "\n")
