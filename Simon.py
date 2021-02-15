@@ -131,7 +131,6 @@ def main():
     start_time = time.time()
     binary_key = hex_to_binary(key,256)
     sub_keys = generate_keys(binary_key)
-
     # Encryption of Test Vector
     binary_plain_text = hex_to_binary(plain_text,128)
     binary_cipher_text = simon(binary_plain_text,sub_keys)
@@ -166,4 +165,8 @@ print("--- Results of Simon in Python --- \n ")
 print("Did Simon encrypt correctly? {}".format(e_check))
 print("Did Simon decrypt correctly? {}".format(d_check))
 print("Simon took an average of {} seconds over 10 runs".format(avg_time))
-print("Simon used an average of {} MB of memory over 10 runs".format(avg_space))
+print("Simon used an average of {} MB of memory over 10 runs\n".format(avg_space))
+
+print("Times: {}".format(times))
+print("Space: {}".format(mems))
+
