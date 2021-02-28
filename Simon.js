@@ -1,10 +1,20 @@
-var performance = require("performance-now")
+const { cpus } = require("os");
+var performance = require("performance-now");
+var process = require('process'); 
 // Test Vector for Simon
 const plaintext = "74206e69206d6f6f6d69732061207369"
 const key = "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"
 const ciphertext  = "8d2b5579afc8a3a03bf72a87efe7b868"
 // z4 as per Simon Spec
 const z4 = [1,1,0,1,0,0,0,1,1,1,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,1,1,1]
+
+// get difference of elements in list 
+function diff(ary) {
+    var newA = [];
+    for (var i = 1; i < ary.length; i++)  newA.push(ary[i] - ary[i - 1])
+    return newA;
+}
+
 // check if two arrays have equal content
 function equalA(a1, a2){
     if(a1.length != a2.length){
@@ -230,23 +240,37 @@ function main(){
 
     mem = process.memoryUsage().heapUsed / 1024 / 1024; 
     mbs = Math.round(mem * 100) / 100
-    return [encrypt_check,decrypt_check,net_time,mbs]
+    cpu_stats = process.cpuUsage()// next line converts from microseconds to seconds
+    return [encrypt_check,decrypt_check,net_time,mbs,cpu_stats.user/1000000,cpu_stats.system/1000000]
 }
 
+user_system_init = process.cpuUsage()
 
 times = []
 mems = []
+cpus_user = []
+cpus_system = []
+
+cpus_user.push(user_system_init.user/1000000)
+cpus_system.push(user_system_init.system/1000000)
+
 for(var i = 0; i < 10; i++){
     results = main()
     times.push(results[2])
     mems.push(results[3])
+    cpus_user.push(results[4])
+    cpus_system.push(results[5])
 }
 
 console.log("--- Results of Simon in JavaScript --- \n")
 console.log("Did Simon encrypt correctly? " + results[0])
 console.log("Did Simon decrypt correctly? " + results[1])
 console.log("Simon took an average of " + average(times) +  " seconds over 10 runs")
-console.log("Simon used an average of " + average(mems) +  " MB of memory over 10 runs\n")
+console.log("Simon used an average of " + average(mems) +  " MB of memory over 10 runs")
+console.log("Simon spent an average of " + average(diff(cpus_user)) +  " seconds in the user CPU over 10 runs")
+console.log("Simon spent an average of " + average(diff(cpus_system)) +  " seconds in the system CPU over 10 runs\n")
 
 console.log("Times: " + times)
-console.log("Space: " + mems + "\n")
+console.log("Space: " + mems )
+console.log("CPU User: " + cpus_user)
+console.log("CPU System: " + cpus_system + "\n")

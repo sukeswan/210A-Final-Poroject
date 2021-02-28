@@ -3,7 +3,7 @@ from statistics import mean
 import os, psutil
 process = psutil.Process(os.getpid())
 
-import copy
+import copy, decimal
 # Test Vector for Simon
 plain_text = "74206e69206d6f6f6d69732061207369"
 key = "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"
@@ -147,19 +147,22 @@ def main():
     net_time = time.time() - start_time
     memory = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
     cpu_stats = psutil.cpu_times(percpu=False)
-    return encrypt_check,decrypt_check,net_time,memory,cpu_stats[0],cpu_stats[2]
+    return encrypt_check,decrypt_check,net_time,memory,decimal.Decimal(cpu_stats[0]),decimal.Decimal(cpu_stats[2])
     
 if __name__ == "__main__":
     cpu_stats = psutil.cpu_times(percpu=False)
 
-    init_user = cpu_stats[0]
-    init_system = cpu_stats[2]
+    init_user = decimal.Decimal(cpu_stats[0])
+    init_system = decimal.Decimal(cpu_stats[2])
 
     times = []
     mems = []
     cpus_user = []
     cpus_system = []
-    
+
+    cpus_user.append(init_user)
+    cpus_system.append(init_system)
+
     for i in range(10):
         e_check,d_check,net_time,memory,cpu_user,cpu_system = main()
         times.append(net_time)
@@ -169,8 +172,8 @@ if __name__ == "__main__":
 
 avg_time = mean(times)
 avg_space = mean(mems)
-avg_cpu_user = (mean(cpus_user) - init_user) /10
-avg_cpu_system = (mean(cpus_system) - init_system) /10
+avg_cpu_user = mean([cpus_user[i + 1] - cpus_user[i] for i in range(len(cpus_user)-1)])
+avg_cpu_system = mean([cpus_system[i + 1] - cpus_system[i] for i in range(len(cpus_system)-1)])
 
 print("--- Results of Simon in Python --- \n ")
 print("Did Simon encrypt correctly? {}".format(e_check))
@@ -182,5 +185,5 @@ print("Simon spent an average of {} seconds in the system CPU over 10 runs\n".fo
 
 print("Times:      {}".format(times))
 print("Space:      {}".format(mems))
-print("CPU User:   {}".format(cpus_user))     # user: time spent by normal processes executing in user modest time
-print("CPU System: {}".format(cpus_system))   # system: time spent by processes executing in kernel mode
+print("CPU User:   {}".format([str(i-init_user) for i in cpus_user]))     # user: time spent by normal processes executing in user modest time
+print("CPU System: {}\n".format([str(i-init_system) for i in cpus_system]))   # system: time spent by processes executing in kernel mode
