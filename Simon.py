@@ -146,27 +146,41 @@ def main():
     
     net_time = time.time() - start_time
     memory = psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2
-
-    return encrypt_check,decrypt_check,net_time,memory
+    cpu_stats = psutil.cpu_times(percpu=False)
+    return encrypt_check,decrypt_check,net_time,memory,cpu_stats[0],cpu_stats[2]
     
 if __name__ == "__main__":
+    cpu_stats = psutil.cpu_times(percpu=False)
+
+    init_user = cpu_stats[0]
+    init_system = cpu_stats[2]
 
     times = []
     mems = []
+    cpus_user = []
+    cpus_system = []
+    
     for i in range(10):
-        e_check,d_check,net_time,memory = main()
+        e_check,d_check,net_time,memory,cpu_user,cpu_system = main()
         times.append(net_time)
         mems.append(memory)
+        cpus_user.append(cpu_user)
+        cpus_system.append(cpu_system)
 
 avg_time = mean(times)
 avg_space = mean(mems)
+avg_cpu_user = (mean(cpus_user) - init_user) /10
+avg_cpu_system = (mean(cpus_system) - init_system) /10
 
 print("--- Results of Simon in Python --- \n ")
 print("Did Simon encrypt correctly? {}".format(e_check))
 print("Did Simon decrypt correctly? {}".format(d_check))
 print("Simon took an average of {} seconds over 10 runs".format(avg_time))
-print("Simon used an average of {} MB of memory over 10 runs\n".format(avg_space))
+print("Simon used an average of {} MB of memory over 10 runs".format(avg_space))
+print("Simon spent an average of {} seconds in the user CPU over 10 runs".format(avg_cpu_user))
+print("Simon spent an average of {} seconds in the system CPU over 10 runs\n".format(avg_cpu_system))
 
-print("Times: {}".format(times))
-print("Space: {}".format(mems))
-
+print("Times:      {}".format(times))
+print("Space:      {}".format(mems))
+print("CPU User:   {}".format(cpus_user))     # user: time spent by normal processes executing in user modest time
+print("CPU System: {}".format(cpus_system))   # system: time spent by processes executing in kernel mode
