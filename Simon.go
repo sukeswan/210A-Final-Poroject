@@ -41,6 +41,13 @@ func bit_xor(one []int, two []int)[]int{
   }
   return result
 }
+func bit_and(one []int, two []int)[]int{
+  result := make([]int, len(one))
+  for i := 0; i < len(one); i++ {
+    result[i] = (one[i] & two[i])
+  }
+  return result
+}
 func invert(input []int) []int{
   result := make([]int, len(input))
   copy(result, input)
@@ -94,21 +101,49 @@ func hex_to_binary(input string) []int{
   return bits
 }
 
+func round(left,right,key []int) ([]int,[]int){
+  left_shift_1 := shift_left(left,1)
+  left_shift_2 := shift_left(left,2)
+  left_shift_8 := shift_left(left,8)
+
+  fx_res := bit_and(left_shift_1,left_shift_8)
+
+  xor_1 := bit_xor(right,fx_res)
+  xor_2 := bit_xor(xor_1,left_shift_2)
+  xor_3 := bit_xor(xor_2,key)
+
+  result_left := xor_3
+  result_right  := left
+  return result_left, result_right
+
+}
+
+func simon(binary_plain_text []int, sub_keys [][]int) []int{
+  left,right := split(binary_plain_text)
+  for i := 0; i < 72; i++ {
+    left,right = round(left, right, sub_keys[i])
+  }
+  return append(left, right...)
+}
+
 
 func main() {
-  // plain_text := "74206e69206d6f6f6d69732061207369"
+  plain_text := "74206e69206d6f6f6d69732061207369"
   key := "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100" //
   // ciphertext  := "8d2b5579afc8a3a03bf72a87efe7b868"
 	z4 := []int{1,1,0,1,0,0,0,1,1,1,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,1,1,1}
   binary_key := hex_to_binary(key)
   // fmt.Printf("%v\n", binary_key)
   sub_keys := generate_keys(binary_key, z4)
-  fmt.Printf("%v\n", sub_keys[len(sub_keys)-1])
+  // fmt.Printf("%v\n", sub_keys[len(sub_keys)-1])
+  binary_plain_text := hex_to_binary(plain_text)
   // test := []int{1,3,5,7,9,11}
-  // fmt.Printf("%v\n", test)
+  // fmt.Printf("%v\n", binary_plain_text)
+  binary_cipher_text := simon(binary_plain_text,sub_keys)
+  fmt.Printf("%v\n", binary_cipher_text)
   // test = shift_left(test, 3)
   // fmt.Printf("%v\n", test)
-  // test := invert([]int{1,1,0,1})
+  // test := bit_and([]int{1,0,0,1}, []int{0,1,0,1})
   // fmt.Printf("%v\n", test)
 
 
