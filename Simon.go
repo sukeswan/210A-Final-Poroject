@@ -125,12 +125,43 @@ func simon(binary_plain_text []int, sub_keys [][]int) []int{
   }
   return append(left, right...)
 }
+func simon_d(binary_plain_text []int, sub_keys [][]int) []int{
+  right,left := split(binary_plain_text)
+  for i := 0; i < 72; i++ {
+    left,right = round(left, right, sub_keys[i])
+  }
+  return append(right, left...)
+}
 
+func binary_to_hex(input []int) string{
+
+  binaryString := ""
+  for _ , bit := range input {
+    b := strconv.Itoa(int(bit))
+    binaryString = binaryString + b
+  }
+
+  hexString := ""
+  loop_range := len(input)/4
+
+  for i := 0; i < loop_range; i++ {
+    idx := i*4
+    bit_ui, _ := strconv.ParseUint(binaryString[idx:idx+4], 2, 64)
+    hexString = hexString + fmt.Sprintf("%x", bit_ui)
+  }
+
+
+  return hexString
+  // ui, err := strconv.ParseUint(s, 2, 64)
+  //   if err != nil {
+  //       return "error"
+  //   }
+}
 
 func main() {
   plain_text := "74206e69206d6f6f6d69732061207369"
   key := "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100" //
-  // ciphertext  := "8d2b5579afc8a3a03bf72a87efe7b868"
+  ciphertext  := "8d2b5579afc8a3a03bf72a87efe7b868"
 	z4 := []int{1,1,0,1,0,0,0,1,1,1,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,1,1,1}
   binary_key := hex_to_binary(key)
   // fmt.Printf("%v\n", binary_key)
@@ -140,12 +171,20 @@ func main() {
   // test := []int{1,3,5,7,9,11}
   // fmt.Printf("%v\n", binary_plain_text)
   binary_cipher_text := simon(binary_plain_text,sub_keys)
-  fmt.Printf("%v\n", binary_cipher_text)
+  // fmt.Printf("%v\n", binary_cipher_text)
+  final_encrypt := binary_to_hex(binary_cipher_text)
   // test = shift_left(test, 3)
-  // fmt.Printf("%v\n", test)
+  encrypt_check := ciphertext == final_encrypt
+  fmt.Printf("%v\n", encrypt_check)
   // test := bit_and([]int{1,0,0,1}, []int{0,1,0,1})
   // fmt.Printf("%v\n", test)
-
+  for i, j := 0, len(sub_keys)-1; i < j; i, j = i+1, j-1 {
+       sub_keys[i], sub_keys[j] = sub_keys[j], sub_keys[i]
+   }
+// fmt.Printf("%v\n", sub_keys[len(sub_keys)-1])
+  recovered_plain_text := simon_d(binary_cipher_text, sub_keys)
+  final_decrypt := binary_to_hex(recovered_plain_text)
+  fmt.Printf("%s\n", final_decrypt)
 
 }
 
