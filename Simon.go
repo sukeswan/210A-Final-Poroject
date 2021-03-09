@@ -243,17 +243,3 @@ func main() {
 func bToMb(b uint64) float64 {
     return float64(b)/ float64(1024) / float64(1024)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
