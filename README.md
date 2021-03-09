@@ -12,7 +12,11 @@ To run this project:
 3. Run the corresponsding make command listed below 
 
 `make js`: runs the javascript implementation of Simon and updates the results in `/Outputs/JavaScript_Output.txt`
+
 `make py`: runs the python3 implementation of Simon and updates the results in `/Outputs/Python_Output.txt`
+
 `make go`: runs the golang implementation of Simon and updates the results in `/Outputs/Go_Output.txt`
+
 `make all`: runs the all 3 implementations in and updates the correpsonding text files 
+
 `make concat`: runs the all 3 implementations and updates the results in te single text file `/Outputs/Output.txt`
