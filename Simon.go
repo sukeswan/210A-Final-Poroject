@@ -162,7 +162,6 @@ func run_simon() (bool, bool, float64, float64, float64, float64){
   sysTimeStart := time.Unix(r.Stime.Sec, int64(r.Stime.Usec*1000))
   usrTimeStart := time.Unix(r.Utime.Sec, int64(r.Utime.Usec*1000))
 
-
   start := time.Now()
   plain_text := "74206e69206d6f6f6d69732061207369"
   key := "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100" //
@@ -192,10 +191,6 @@ func run_simon() (bool, bool, float64, float64, float64, float64){
   usrTimeEnd := time.Unix(r.Utime.Sec, int64(r.Utime.Usec*1000))
   sys_secs := (sysTimeEnd.Sub(sysTimeStart)).Seconds()
   usr_secs := (usrTimeEnd.Sub(usrTimeStart)).Seconds()
-  // fmt.Println("Sys time:", sys_secs)
-  // fmt.Println("Usr time:", usr_secs)
-
-
   return encrypt_check, decrypt_check, elapsed.Seconds(), memory, sys_secs, usr_secs
 }
 
@@ -235,7 +230,7 @@ func main() {
   fmt.Printf("Simon took an average of %v seconds over 10 runs\n", avg_time)
   fmt.Printf("Simon used an average of %v MB of memory over 10 runs\n", avg_mem)
   fmt.Printf("Simon spent an average of %v seconds in the user CPU over 10 runs\n", avg_s)
-  fmt.Printf("Simon spent an average of %v seconds in the system CPU over 10 runs\n", avg_u)
+  fmt.Printf("Simon spent an average of %v seconds in the system CPU over 10 runs\n\n", avg_u)
 
 
   fmt.Printf("Times:      %v\n", times)
