@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
   "strconv"
-  // "strings"
+  "time"
+  // "log"
 )
 
 func split(input []int) ([]int, []int){
@@ -149,43 +150,59 @@ func binary_to_hex(input []int) string{
     bit_ui, _ := strconv.ParseUint(binaryString[idx:idx+4], 2, 64)
     hexString = hexString + fmt.Sprintf("%x", bit_ui)
   }
-
-
   return hexString
-  // ui, err := strconv.ParseUint(s, 2, 64)
-  //   if err != nil {
-  //       return "error"
-  //   }
 }
 
-func main() {
+
+func run_simon() (bool, bool, float64){
+  start := time.Now()
   plain_text := "74206e69206d6f6f6d69732061207369"
   key := "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100" //
   ciphertext  := "8d2b5579afc8a3a03bf72a87efe7b868"
-	z4 := []int{1,1,0,1,0,0,0,1,1,1,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,1,1,1}
+  z4 := []int{1,1,0,1,0,0,0,1,1,1,1,0,0,1,1,0,1,0,1,1,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,0,0,1,0,1,0,0,1,0,0,1,1,1,0,1,1,1,1}
   binary_key := hex_to_binary(key)
-  // fmt.Printf("%v\n", binary_key)
   sub_keys := generate_keys(binary_key, z4)
-  // fmt.Printf("%v\n", sub_keys[len(sub_keys)-1])
   binary_plain_text := hex_to_binary(plain_text)
-  // test := []int{1,3,5,7,9,11}
-  // fmt.Printf("%v\n", binary_plain_text)
   binary_cipher_text := simon(binary_plain_text,sub_keys)
-  // fmt.Printf("%v\n", binary_cipher_text)
   final_encrypt := binary_to_hex(binary_cipher_text)
-  // test = shift_left(test, 3)
   encrypt_check := ciphertext == final_encrypt
-  fmt.Printf("%v\n", encrypt_check)
-  // test := bit_and([]int{1,0,0,1}, []int{0,1,0,1})
-  // fmt.Printf("%v\n", test)
+  // _ = encrypt_check
+  // fmt.Printf("%v\n", encrypt_check)
+
   for i, j := 0, len(sub_keys)-1; i < j; i, j = i+1, j-1 {
        sub_keys[i], sub_keys[j] = sub_keys[j], sub_keys[i]
    }
-// fmt.Printf("%v\n", sub_keys[len(sub_keys)-1])
   recovered_plain_text := simon_d(binary_cipher_text, sub_keys)
   final_decrypt := binary_to_hex(recovered_plain_text)
-  fmt.Printf("%s\n", final_decrypt)
+  decrypt_check := final_decrypt == plain_text
+  // _ = decrypt_check
+  // fmt.Printf("%s\n", )
+  elapsed := time.Since(start)
+  // fmt.Printf("Binomial took %s", elapsed)
+  return encrypt_check, decrypt_check, elapsed.Seconds()
+}
 
+func main() {
+  times := make([]float64, 10)
+  var e_check, d_check bool
+  var t float64
+
+  for i :=0;  i<10; i++{
+    e_check, d_check, t = run_simon()
+    times[i] = t
+  }
+  sum := float64(0)
+  for i := 0; i < 10; i++ {
+     sum += (times[i])
+   }
+   avg_time := (float64(sum)) / (float64(10))
+
+  fmt.Printf("--- Results of Simon in Golang --- \n")
+  fmt.Printf("Did Simon encrypt correctly? %v\n", e_check)
+  fmt.Printf("Did Simon decrypt correctly? %v\n", d_check)
+  fmt.Printf("Simon took an average of %v seconds over 10 runs\n", avg_time)
+
+  fmt.Printf("Times:      %v\n", times)
 }
 
 
