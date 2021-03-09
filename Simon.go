@@ -4,7 +4,8 @@ import (
 	"fmt"
   "strconv"
   "time"
-  // "log"
+  "runtime"
+  "syscall"
 )
 
 func split(input []int) ([]int, []int){
@@ -154,7 +155,14 @@ func binary_to_hex(input []int) string{
 }
 
 
-func run_simon() (bool, bool, float64){
+func run_simon() (bool, bool, float64, float64, float64, float64){
+  var r syscall.Rusage
+
+	_ = syscall.Getrusage(syscall.RUSAGE_SELF, &r)
+  sysTimeStart := time.Unix(r.Stime.Sec, int64(r.Stime.Usec*1000))
+  usrTimeStart := time.Unix(r.Utime.Sec, int64(r.Utime.Usec*1000))
+
+
   start := time.Now()
   plain_text := "74206e69206d6f6f6d69732061207369"
   key := "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100" //
@@ -166,8 +174,6 @@ func run_simon() (bool, bool, float64){
   binary_cipher_text := simon(binary_plain_text,sub_keys)
   final_encrypt := binary_to_hex(binary_cipher_text)
   encrypt_check := ciphertext == final_encrypt
-  // _ = encrypt_check
-  // fmt.Printf("%v\n", encrypt_check)
 
   for i, j := 0, len(sub_keys)-1; i < j; i, j = i+1, j-1 {
        sub_keys[i], sub_keys[j] = sub_keys[j], sub_keys[i]
@@ -175,40 +181,73 @@ func run_simon() (bool, bool, float64){
   recovered_plain_text := simon_d(binary_cipher_text, sub_keys)
   final_decrypt := binary_to_hex(recovered_plain_text)
   decrypt_check := final_decrypt == plain_text
-  // _ = decrypt_check
-  // fmt.Printf("%s\n", )
+
   elapsed := time.Since(start)
-  // fmt.Printf("Binomial took %s", elapsed)
-  return encrypt_check, decrypt_check, elapsed.Seconds()
+  var m runtime.MemStats
+  runtime.ReadMemStats(&m)
+  memory := bToMb(m.Alloc)
+
+  _ = syscall.Getrusage(syscall.RUSAGE_SELF, &r)
+  sysTimeEnd := time.Unix(r.Stime.Sec, int64(r.Stime.Usec*1000))
+  usrTimeEnd := time.Unix(r.Utime.Sec, int64(r.Utime.Usec*1000))
+  sys_secs := (sysTimeEnd.Sub(sysTimeStart)).Seconds()
+  usr_secs := (usrTimeEnd.Sub(usrTimeStart)).Seconds()
+  // fmt.Println("Sys time:", sys_secs)
+  // fmt.Println("Usr time:", usr_secs)
+
+
+  return encrypt_check, decrypt_check, elapsed.Seconds(), memory, sys_secs, usr_secs
 }
 
 func main() {
   times := make([]float64, 10)
+  mems := make([]float64, 10)
+  cpus_system := make([]float64, 10)
+  cpus_user := make([]float64, 10)
   var e_check, d_check bool
-  var t float64
+  var t,m,s,u float64
 
   for i :=0;  i<10; i++{
-    e_check, d_check, t = run_simon()
+    e_check, d_check, t, m, s, u = run_simon()
     times[i] = t
+    mems[i] = m
+    cpus_system[i] = s
+    cpus_user[i] = u
   }
-  sum := float64(0)
+  sum_t := float64(0)
+  sum_m := float64(0)
+  sum_s := float64(0)
+  sum_u := float64(0)
   for i := 0; i < 10; i++ {
-     sum += (times[i])
+     sum_t += (times[i])
+     sum_m += (mems[i])
+     sum_s += (cpus_system[i])
+     sum_u += (cpus_user[i])
    }
-   avg_time := (float64(sum)) / (float64(10))
+   avg_time := (float64(sum_t)) / (float64(10))
+   avg_mem := (float64(sum_m)) / (float64(10))
+   avg_s := (float64(sum_s)) / (float64(10))
+   avg_u := (float64(sum_u)) / (float64(10))
 
   fmt.Printf("--- Results of Simon in Golang --- \n")
   fmt.Printf("Did Simon encrypt correctly? %v\n", e_check)
   fmt.Printf("Did Simon decrypt correctly? %v\n", d_check)
   fmt.Printf("Simon took an average of %v seconds over 10 runs\n", avg_time)
+  fmt.Printf("Simon used an average of %v MB of memory over 10 runs\n", avg_mem)
+  fmt.Printf("Simon spent an average of %v seconds in the user CPU over 10 runs\n", avg_s)
+  fmt.Printf("Simon spent an average of %v seconds in the system CPU over 10 runs\n", avg_u)
+
 
   fmt.Printf("Times:      %v\n", times)
+  fmt.Printf("Space:      %v\n", mems)
+  fmt.Printf("CPU User:   %v\n", cpus_system)
+  fmt.Printf("CPU System: %v\n", cpus_user)
 }
 
 
-
-
-
+func bToMb(b uint64) float64 {
+    return float64(b)/ float64(1024) / float64(1024)
+}
 
 
 
